@@ -1,5 +1,6 @@
 package com.example;
 
+import com.example.discord.DiscordWebhook;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -11,11 +12,10 @@ import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
-import org.json.JSONObject;
+import java.awt.*;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.text.DecimalFormat;
 
 @Slf4j
 @PluginDescriptor(
@@ -33,6 +33,7 @@ public class LootAnnouncerPlugin extends Plugin
 	private LootAnnouncerConfig config;
 
 	private HttpURLConnection connection;
+
 	@Provides
 	LootAnnouncerConfig provideConfig(ConfigManager configManager) {
 		return configManager.getConfig(LootAnnouncerConfig.class);
@@ -54,14 +55,11 @@ public class LootAnnouncerPlugin extends Plugin
 	public void onItemSpawned(ItemSpawned itemSpawned) {
 
 		final int itemID = itemSpawned.getItem().getId();
-
-		// Template of item by ID
 		ItemComposition itemComposition = itemManager.getItemComposition(itemID);
 
-		// Checks if item is noted and returns correct ID if it is
+		// 799 are noted items, -1 are item ID's
 		final int realItemID = itemComposition.getNote() != -1 ? itemComposition.getLinkedNoteId() : itemID;
 
-		// Create Item
 		final Item item = Item.builder()
 				.ID(realItemID)
 				.name(itemComposition.getMembersName())
@@ -76,51 +74,42 @@ public class LootAnnouncerPlugin extends Plugin
 				throw new RuntimeException(e);
 			}
 		}
-
 	}
 
 	private void sendAnnouncement(Item item) throws IOException {
 
 		// Check if Webhook URL is not empty
 		if (!config.getDiscordWebhookURL().equals("")) {
+			DiscordWebhook webhook = new DiscordWebhook(config.getDiscordWebhookURL());
+			webhook.setUsername("Loot Announcer Bot");
 
-			// Format the content
-			String content = String.format("[ Expensive Loot Dropped ] \n" +
-					"Item: %s\n" + "GE Price: %s",
-					item.getName(), item.getGrandExchangePrice()
-			);
+			DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
+			embed.setTitle(item.getName().toUpperCase());
+			embed.setColor(Color.ORANGE);
+			embed.setThumbnail(getThumbnailURL(item.getID()));
+			embed.addField("",
+					"Value ・ " + shortenGPValue(item.getGrandExchangePrice()),
+					false);
 
-			// Make JSONObject for Webhook
-			JSONObject json = new JSONObject();
-			json.put("content", content);
-			json.put("username", "Test");
-
-			openWebhookConnection();
-			sendJSONToWebhook(json);
-			closeWebhookConnection();
+			webhook.addEmbed(embed);
+			webhook.execute();
 		}
 	}
 
-	private void openWebhookConnection() throws IOException {
-		// Connects to the Webhook URL
-		URL webhookURL = new URL(config.getDiscordWebhookURL());
-		connection = (HttpURLConnection) webhookURL.openConnection();
-		connection.setRequestMethod("POST");
-		connection.setRequestProperty("User-Agent", "Mozilla/5.0");
-		connection.addRequestProperty("Content-Type", "application/json");
-		connection.setDoOutput(true);
-	}
+	private String shortenGPValue(int value) {
+		String suffix[] = {"", "K", "M", "B"};
 
-	private void closeWebhookConnection() throws IOException {
-		connection.getInputStream().close();
-		connection.disconnect();
-	}
+		int index = 0;
+		while (value / 1000 >= 1) {
+			value /= 1000;
+			index++;
+		}
 
-	private void sendJSONToWebhook(JSONObject json) throws IOException {
-		OutputStream stream = connection.getOutputStream();
-		stream.write(json.toString().getBytes());
-		stream.flush();
-		stream.close();
+		DecimalFormat decimalFormat = new DecimalFormat("##.##");
+		return String.format("%s%s", decimalFormat.format(value), suffix[index]);
+	}
+	private String getThumbnailURL(int id) {
+		return "https://static.runelite.net/cache/item/icon/" + id + ".png";
 	}
 
 	private boolean itemIsValuable(int value) {
