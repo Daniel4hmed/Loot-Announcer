@@ -105,7 +105,7 @@ public class LootAnnouncerPlugin extends Plugin
 			index++;
 		}
 
-		DecimalFormat decimalFormat = new DecimalFormat("##.##");
+		DecimalFormat decimalFormat = new DecimalFormat("#.##");
 		return String.format("%s%s", decimalFormat.format(value), suffix[index]);
 	}
 	private String getThumbnailURL(int id) {
