@@ -7,7 +7,7 @@ public class LootAnnouncerTest
 {
 	public static void main(String[] args) throws Exception
 	{
-		ExternalPluginManager.loadBuiltin(LootAnnouncer.class);
+		ExternalPluginManager.loadBuiltin(LootAnnouncerPlugin.class);
 		RuneLite.main(args);
 	}
 }

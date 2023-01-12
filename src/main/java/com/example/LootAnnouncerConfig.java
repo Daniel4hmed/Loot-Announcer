@@ -9,17 +9,16 @@ public interface LootAnnouncerConfig extends Config
 			keyName = "lootValue",
 			name = "Loot Value",
 			description = "Minimum value for loot to be announced."
-	) default int lootValue() {
-		final int DEFAULT_VALUE = 1000000;
-		return DEFAULT_VALUE;
+	) default int minimumLootValue() {
+		return 1000000;		// 1 Million
 	}
-	@ConfigItem(
-			keyName = "pets",
-			name = "Pet Drop",
-			description = "Announce when you obtain a pet"
-	) default boolean petDrop() {
-		return true;
-	}
+//	@ConfigItem(
+//			keyName = "pets",
+//			name = "Pet Drop",
+//			description = "Announce when you obtain a pet"
+//	) default boolean petDrop() {
+//		return true;
+//	}
 
 	@ConfigSection(
 			name = "Discord Settings",
@@ -28,11 +27,11 @@ public interface LootAnnouncerConfig extends Config
 	) String discordSettings = "Discord Settings";
 
 	@ConfigItem(
-			keyName = "discordUsername",
-			name = "Discord ID",
-			description = "example#1234",
+			keyName = "discordWebhookURL",
+			name = "Discord Webhook URL",
+			description = "Sends loot info to the URL",
 			section = discordSettings
-	) default String getDiscordID() {
-		return null;
+	) default String getDiscordWebhookURL() {
+		return "";
 	}
 }
