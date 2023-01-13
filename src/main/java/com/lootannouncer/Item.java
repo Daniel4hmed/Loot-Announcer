@@ -1,4 +1,4 @@
-package com.example;
+package com.lootannouncer;
 
 import lombok.Builder;
 import lombok.Data;

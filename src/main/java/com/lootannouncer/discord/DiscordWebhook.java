@@ -1,4 +1,4 @@
-package com.example.discord;
+package com.lootannouncer.discord;
 
 import org.json.JSONObject;
 
