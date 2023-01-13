@@ -1,6 +1,6 @@
-package com.example;
+package com.lootannouncer;
 
-import com.example.discord.DiscordWebhook;
+import com.lootannouncer.discord.DiscordWebhook;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provides;
 import javax.inject.Inject;
@@ -55,18 +55,18 @@ public class LootAnnouncerPlugin extends Plugin
 
 	@Subscribe
 	public void onChatMessage(ChatMessage messageEvent) {
-		if (config.includePetDrops()) {
-			String chatMessage = messageEvent.getMessage();
 
-			if (messageEvent.getType() == ChatMessageType.GAMEMESSAGE) {
-				if (PET_MESSAGES.stream().anyMatch(chatMessage::contains)) {
-					boolean duplicate = chatMessage.equals(OWNED_PET_MESSAGE);
-					try {
-						sendPetAnnouncement(duplicate);
-					} catch (IOException e) {
-						throw new RuntimeException();
-					}
-				}
+		if (messageEvent.getType() != ChatMessageType.GAMEMESSAGE) return;
+		if (!config.includePetDrops()) return;
+
+		String chatMessage = messageEvent.getMessage();
+
+		if (PET_MESSAGES.stream().anyMatch(chatMessage::contains)) {
+			boolean duplicate = chatMessage.equals(OWNED_PET_MESSAGE);
+			try {
+				sendPetAnnouncement(duplicate);
+			} catch (IOException e) {
+				throw new RuntimeException();
 			}
 		}
 	}
