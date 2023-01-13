@@ -1,10 +1,12 @@
 package com.example;
 
 import com.example.discord.DiscordWebhook;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.ItemSpawned;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -19,7 +21,7 @@ import java.text.DecimalFormat;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Loot Announcer"
+		name = "Loot Announcer"
 )
 public class LootAnnouncerPlugin extends Plugin
 {
@@ -33,6 +35,12 @@ public class LootAnnouncerPlugin extends Plugin
 	private LootAnnouncerConfig config;
 
 	private HttpURLConnection connection;
+
+	private static final String OWNED_PET_MESSAGE = "You have a funny feeling like you would have been followed";
+	private static final ImmutableList<String> PET_MESSAGES = ImmutableList.of(
+			"You have a funny feeling like you're being followed",
+			"You feel something weird sneaking into your backpack",
+			"You have a funny feeling like you would have been followed");
 
 	@Provides
 	LootAnnouncerConfig provideConfig(ConfigManager configManager) {
@@ -49,6 +57,27 @@ public class LootAnnouncerPlugin extends Plugin
 	protected void shutDown()
 	{
 		log.info("Loot Announcer stopped!");
+	}
+
+	@Subscribe
+	public void onChatMessage(ChatMessage messageEvent) {
+		if (config.includePetDrops()) {
+			String chatMessage = messageEvent.getMessage();
+			boolean duplicate = false;
+
+			if (PET_MESSAGES.stream().anyMatch(chatMessage::contains)) {
+
+				if (chatMessage.equals(OWNED_PET_MESSAGE)) {
+					duplicate = true;
+				}
+
+				try {
+					sendPetAnnouncement(duplicate);
+				} catch (IOException e) {
+					throw new RuntimeException();
+				}
+			}
+		}
 	}
 
 	@Subscribe
@@ -73,6 +102,29 @@ public class LootAnnouncerPlugin extends Plugin
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
+		}
+	}
+	private void sendPetAnnouncement(boolean duplicate) throws IOException {
+
+		// Use Kitten Thumbnail
+		final int PET_THUMBNAIL_ID = 1556;
+
+		String title = duplicate ? "The duplicate pet ran off..." : "You just received a pet!";
+		String description = duplicate ? "The pet saw its cousin and ran away! (You already own this pet)" : "Congratulations on your new pet!";
+
+		// Check if Webhook URL is not empty
+		if (!config.getDiscordWebhookURL().equals("")) {
+			DiscordWebhook webhook = new DiscordWebhook(config.getDiscordWebhookURL());
+			webhook.setUsername("Loot Announcer Bot");
+
+			DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
+			embed.setTitle(title);
+			embed.setColor(Color.ORANGE);
+			embed.setThumbnail(getThumbnailURL(PET_THUMBNAIL_ID));
+			embed.setDescription(description);
+
+			webhook.addEmbed(embed);
+			webhook.execute();
 		}
 	}
 

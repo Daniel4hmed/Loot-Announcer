@@ -12,13 +12,13 @@ public interface LootAnnouncerConfig extends Config
 	) default int minimumLootValue() {
 		return 1000000;		// 1 Million
 	}
-//	@ConfigItem(
-//			keyName = "pets",
-//			name = "Pet Drop",
-//			description = "Announce when you obtain a pet"
-//	) default boolean petDrop() {
-//		return true;
-//	}
+	@ConfigItem(
+			keyName = "pets",
+			name = "Include Pet Drops?",
+			description = "Announce when you obtain a pet"
+	) default boolean includePetDrops() {
+		return true;
+	}
 
 	@ConfigSection(
 			name = "Discord Settings",
