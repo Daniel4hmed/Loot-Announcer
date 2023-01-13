@@ -48,33 +48,24 @@ public class LootAnnouncerPlugin extends Plugin
 	}
 
 	@Override
-	protected void startUp()
-	{
-		log.info("Loot Announcer started!");
-	}
+	protected void startUp() { }
 
 	@Override
-	protected void shutDown()
-	{
-		log.info("Loot Announcer stopped!");
-	}
+	protected void shutDown() {	}
 
 	@Subscribe
 	public void onChatMessage(ChatMessage messageEvent) {
 		if (config.includePetDrops()) {
 			String chatMessage = messageEvent.getMessage();
-			boolean duplicate = false;
 
-			if (PET_MESSAGES.stream().anyMatch(chatMessage::contains)) {
-
-				if (chatMessage.equals(OWNED_PET_MESSAGE)) {
-					duplicate = true;
-				}
-
-				try {
-					sendPetAnnouncement(duplicate);
-				} catch (IOException e) {
-					throw new RuntimeException();
+			if (messageEvent.getType() == ChatMessageType.ENGINE) {
+				if (PET_MESSAGES.stream().anyMatch(chatMessage::contains)) {
+					boolean duplicate = chatMessage.equals(OWNED_PET_MESSAGE);
+					try {
+						sendPetAnnouncement(duplicate);
+					} catch (IOException e) {
+						throw new RuntimeException();
+					}
 				}
 			}
 		}
@@ -104,16 +95,16 @@ public class LootAnnouncerPlugin extends Plugin
 			}
 		}
 	}
+
 	private void sendPetAnnouncement(boolean duplicate) throws IOException {
-
-		// Use Kitten Thumbnail
-		final int PET_THUMBNAIL_ID = 1556;
-
-		String title = duplicate ? "The duplicate pet ran off..." : "You just received a pet!";
-		String description = duplicate ? "The pet saw its cousin and ran away! (You already own this pet)" : "Congratulations on your new pet!";
-
 		// Check if Webhook URL is not empty
 		if (!config.getDiscordWebhookURL().equals("")) {
+
+			// Use Kitten Thumbnail
+			final int PET_THUMBNAIL_ID = 1556;
+			String title = duplicate ? "The duplicate pet ran off..." : "You just received a pet!";
+			String description = duplicate ? "The pet saw its cousin and ran away! (You already own this pet)" : "Congratulations on your new pet!";
+
 			DiscordWebhook webhook = new DiscordWebhook(config.getDiscordWebhookURL());
 			webhook.setUsername("Loot Announcer Bot");
 
@@ -129,7 +120,6 @@ public class LootAnnouncerPlugin extends Plugin
 	}
 
 	private void sendAnnouncement(Item item) throws IOException {
-
 		// Check if Webhook URL is not empty
 		if (!config.getDiscordWebhookURL().equals("")) {
 			DiscordWebhook webhook = new DiscordWebhook(config.getDiscordWebhookURL());
@@ -149,7 +139,7 @@ public class LootAnnouncerPlugin extends Plugin
 	}
 
 	private String shortenGPValue(int value) {
-		String suffix[] = {"", "K", "M", "B"};
+		String[] suffix = {"", "K", "M", "B"};
 
 		int index = 0;
 		while (value / 1000 >= 1) {
