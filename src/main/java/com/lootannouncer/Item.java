@@ -9,7 +9,6 @@ public class Item {
 
     private int ID;
     private int grandExchangePrice;
-    private int highAlchemyPrice;
     private int quantity;
     private String name;
 

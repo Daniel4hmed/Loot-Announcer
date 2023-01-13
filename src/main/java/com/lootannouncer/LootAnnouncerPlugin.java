@@ -74,68 +74,68 @@ public class LootAnnouncerPlugin extends Plugin
 	@Subscribe
 	public void onItemSpawned(ItemSpawned itemSpawned) {
 
-		final int itemID = itemSpawned.getItem().getId();
+		int itemID = itemSpawned.getItem().getId();
+
 		ItemComposition itemComposition = itemManager.getItemComposition(itemID);
+		itemID = itemComposition.getNote() != -1 ? itemComposition.getLinkedNoteId() : itemID;
 
-		// 799 are noted items, -1 are item ID's
-		final int realItemID = itemComposition.getNote() != -1 ? itemComposition.getLinkedNoteId() : itemID;
+		if (itemManager.getItemPrice(itemID) < config.minimumLootValue()) return;
 
-		final Item item = Item.builder()
-				.ID(realItemID)
-				.name(itemComposition.getMembersName())
-				.grandExchangePrice(itemManager.getItemPrice(realItemID))
-				.highAlchemyPrice(itemComposition.getHaPrice())
-				.build();
+		final Item item = buildItem(itemComposition, itemID);
 
-		if (itemIsValuable(item.getGrandExchangePrice())) {
-			try {
-				sendAnnouncement(item);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+		try {
+			sendAnnouncement(item);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
 	private void sendPetAnnouncement(boolean duplicate) throws IOException {
-		// Check if Webhook URL is not empty
-		if (!config.getDiscordWebhookURL().equals("")) {
 
-			// Use Kitten Thumbnail
-			final int PET_THUMBNAIL_ID = 1556;
-			String title = duplicate ? "The duplicate pet ran off..." : "You just received a pet!";
-			String description = duplicate ? "The pet saw its cousin and ran away! (You already own this pet)" : "Congratulations on your new pet!";
+		if (config.getDiscordWebhookURL().equals("")) return;
 
-			DiscordWebhook webhook = new DiscordWebhook(config.getDiscordWebhookURL());
-			webhook.setUsername("Loot Announcer Bot");
+		// Use Kitten Thumbnail
+		final int PET_THUMBNAIL_ID = 1556;
+		String title = duplicate ? "The duplicate pet ran off..." : "You just received a pet!";
+		String description = duplicate ? "The pet saw its cousin and ran away! (You already own this pet)" : "Congratulations on your new pet!";
 
-			DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
-			embed.setTitle(title);
-			embed.setColor(Color.ORANGE);
-			embed.setThumbnail(getThumbnailURL(PET_THUMBNAIL_ID));
-			embed.setDescription(description);
+		DiscordWebhook webhook = new DiscordWebhook(config.getDiscordWebhookURL());
+		webhook.setUsername("Loot Announcer Bot");
 
-			webhook.addEmbed(embed);
-			webhook.execute();
-		}
+		DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
+		embed.setTitle(title);
+		embed.setColor(Color.ORANGE);
+		embed.setThumbnail(getThumbnailURL(PET_THUMBNAIL_ID));
+		embed.setDescription(description);
+
+		webhook.addEmbed(embed);
+		webhook.execute();
 	}
 
 	private void sendAnnouncement(Item item) throws IOException {
-		// Check if Webhook URL is not empty
-		if (!config.getDiscordWebhookURL().equals("")) {
-			DiscordWebhook webhook = new DiscordWebhook(config.getDiscordWebhookURL());
-			webhook.setUsername("Loot Announcer Bot");
 
-			DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
-			embed.setTitle(item.getName().toUpperCase());
-			embed.setColor(Color.ORANGE);
-			embed.setThumbnail(getThumbnailURL(item.getID()));
-			embed.addField("",
-					"Value: " + shortenGPValue(item.getGrandExchangePrice()),
-					false);
+		if (config.getDiscordWebhookURL().equals("")) return;
 
-			webhook.addEmbed(embed);
-			webhook.execute();
-		}
+		DiscordWebhook webhook = new DiscordWebhook(config.getDiscordWebhookURL());
+		webhook.setUsername("Loot Announcer Bot");
+
+		DiscordWebhook.EmbedObject embed = new DiscordWebhook.EmbedObject();
+		embed.setTitle(item.getName().toUpperCase());
+		embed.setColor(Color.ORANGE);
+		embed.setThumbnail(getThumbnailURL(item.getID()));
+		embed.addField("",
+				"Value: " + shortenGPValue(item.getGrandExchangePrice()),
+				false);
+
+		webhook.addEmbed(embed);
+		webhook.execute();
+	}
+
+	private Item buildItem(ItemComposition itemComposition, int itemID) {
+		return Item.builder().ID(itemID)
+				.name(itemComposition.getMembersName())
+				.grandExchangePrice(itemManager.getItemPrice(itemID))
+				.build();
 	}
 
 	private String shortenGPValue(float value) {
@@ -153,9 +153,4 @@ public class LootAnnouncerPlugin extends Plugin
 	private String getThumbnailURL(int id) {
 		return "https://static.runelite.net/cache/item/icon/" + id + ".png";
 	}
-
-	private boolean itemIsValuable(int value) {
-		return value >= config.minimumLootValue();
-	}
-
 }
