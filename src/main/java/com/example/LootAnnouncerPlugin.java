@@ -58,7 +58,7 @@ public class LootAnnouncerPlugin extends Plugin
 		if (config.includePetDrops()) {
 			String chatMessage = messageEvent.getMessage();
 
-			if (messageEvent.getType() == ChatMessageType.ENGINE) {
+			if (messageEvent.getType() == ChatMessageType.GAMEMESSAGE) {
 				if (PET_MESSAGES.stream().anyMatch(chatMessage::contains)) {
 					boolean duplicate = chatMessage.equals(OWNED_PET_MESSAGE);
 					try {
@@ -130,7 +130,7 @@ public class LootAnnouncerPlugin extends Plugin
 			embed.setColor(Color.ORANGE);
 			embed.setThumbnail(getThumbnailURL(item.getID()));
 			embed.addField("",
-					"Value ・ " + shortenGPValue(item.getGrandExchangePrice()),
+					"Value: " + shortenGPValue(item.getGrandExchangePrice()),
 					false);
 
 			webhook.addEmbed(embed);
@@ -138,7 +138,7 @@ public class LootAnnouncerPlugin extends Plugin
 		}
 	}
 
-	private String shortenGPValue(int value) {
+	private String shortenGPValue(float value) {
 		String[] suffix = {"", "K", "M", "B"};
 
 		int index = 0;
