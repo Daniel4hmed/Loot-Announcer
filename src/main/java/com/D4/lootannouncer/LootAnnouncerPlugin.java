@@ -1,24 +1,32 @@
-package com.lootannouncer;
+package com.D4.lootannouncer;
 
-import com.lootannouncer.discord.DiscordWebhook;
+import com.D4.lootannouncer.discord.DiscordWebhook;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provides;
-import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.*;
+import net.runelite.api.ChatMessageType;
+import net.runelite.api.Client;
+import net.runelite.api.ItemComposition;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.ItemSpawned;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.NpcLootReceived;
+import net.runelite.client.events.PlayerLootReceived;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.ItemStack;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import org.pf4j.Extension;
 
+import javax.inject.Inject;
 import java.awt.*;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.text.DecimalFormat;
+import java.util.Collection;
 
+@Extension
 @Slf4j
 @PluginDescriptor(
 		name = "Loot Announcer"
@@ -57,7 +65,7 @@ public class LootAnnouncerPlugin extends Plugin
 	public void onChatMessage(ChatMessage messageEvent) {
 
 		if (messageEvent.getType() != ChatMessageType.GAMEMESSAGE) return;
-		if (!config.includePetDrops()) return;
+		if (!config.notifyOnPetDrop()) return;
 
 		String chatMessage = messageEvent.getMessage();
 
@@ -73,6 +81,7 @@ public class LootAnnouncerPlugin extends Plugin
 
 	@Subscribe
 	public void onItemSpawned(ItemSpawned itemSpawned) {
+		if (!config.notifyOnItemSpawn()) return;
 
 		int itemID = itemSpawned.getItem().getId();
 
@@ -94,16 +103,13 @@ public class LootAnnouncerPlugin extends Plugin
 	public void onNpcLootReceived(NpcLootReceived npcLootReceived) {
 		Collection<ItemStack> npcLoot = npcLootReceived.getItems();
 
-		for (ItemStack itemDrop:npcLoot) {
+		for (ItemStack loot:npcLoot) {
 
-			int itemID = itemDrop.getId();
+			int itemID = loot.getId();
 			ItemComposition itemComposition = itemManager.getItemComposition(itemID);
 			itemID = itemComposition.getNote() != -1 ? itemComposition.getLinkedNoteId() : itemID;
 
-			if (itemManager.getItemPrice(itemID) < config.minimumLootValue()) {
-				log.info("minimum value was not met, continuing;");
-				continue;
-			}
+			if (itemManager.getItemPrice(itemID) < config.minimumLootValue()) continue;
 
 			final Item item = buildItem(itemComposition, itemID);
 

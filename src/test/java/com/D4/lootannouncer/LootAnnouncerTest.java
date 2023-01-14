@@ -1,4 +1,4 @@
-package com.lootannouncer;
+package com.D4.lootannouncer;
 
 import net.runelite.client.RuneLite;
 import net.runelite.client.externalplugins.ExternalPluginManager;
