@@ -12,7 +12,6 @@ import net.runelite.api.events.ItemSpawned;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.NpcLootReceived;
-import net.runelite.client.events.PlayerLootReceived;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.ItemStack;
 import net.runelite.client.plugins.Plugin;
@@ -29,7 +28,9 @@ import java.util.Collection;
 @Extension
 @Slf4j
 @PluginDescriptor(
-		name = "Loot Announcer"
+		name = "Loot Announcer",
+		description = "Sends you notifications to your discord based on the loot value. " +
+				"By default it only notifies you on NPC loot drops."
 )
 public class LootAnnouncerPlugin extends Plugin
 {
