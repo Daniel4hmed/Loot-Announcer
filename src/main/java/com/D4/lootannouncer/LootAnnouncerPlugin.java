@@ -90,6 +90,31 @@ public class LootAnnouncerPlugin extends Plugin
 		}
 	}
 
+	@Subscribe
+	public void onNpcLootReceived(NpcLootReceived npcLootReceived) {
+		Collection<ItemStack> npcLoot = npcLootReceived.getItems();
+
+		for (ItemStack itemDrop:npcLoot) {
+
+			int itemID = itemDrop.getId();
+			ItemComposition itemComposition = itemManager.getItemComposition(itemID);
+			itemID = itemComposition.getNote() != -1 ? itemComposition.getLinkedNoteId() : itemID;
+
+			if (itemManager.getItemPrice(itemID) < config.minimumLootValue()) {
+				log.info("minimum value was not met, continuing;");
+				continue;
+			}
+
+			final Item item = buildItem(itemComposition, itemID);
+
+			try {
+				sendAnnouncement(item);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
 	private void sendPetAnnouncement(boolean duplicate) throws IOException {
 
 		if (config.getDiscordWebhookURL().equals("")) return;
