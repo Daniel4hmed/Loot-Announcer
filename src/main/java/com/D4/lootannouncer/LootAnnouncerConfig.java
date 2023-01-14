@@ -30,17 +30,10 @@ public interface LootAnnouncerConfig extends Config
 		return true;
 	}
 	@ConfigItem(
-			keyName = "playerLoot",
-			name = "Notify when player loots",
-			description = "When you receive loot from [Fill Here]",
-			position = 2,
-			section = settingsTitle
-	) default boolean notifyPlayerReceivesLoot() { return true; }
-	@ConfigItem(
 			keyName = "itemSpawn",
 			name = "Notify when items spawn",
 			description = "Any item that spawns on screen and meets your minimum value",
-			position = 3,
+			position = 2,
 			section = settingsTitle
 	) default boolean notifyOnItemSpawn() { return false; }
 
